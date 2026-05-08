@@ -23,31 +23,33 @@ import { readFileSync, statSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { resolve, relative, extname, sep } from "node:path";
 
-const args = parseArgs(process.argv.slice(2));
+function main() {
+  const args = parseArgs(process.argv.slice(2));
 
-if (args.preflight) {
-  process.stdout.write(JSON.stringify(preflight(), null, 2) + "\n");
+  if (args.preflight) {
+    process.stdout.write(JSON.stringify(preflight(), null, 2) + "\n");
+    process.exit(0);
+  }
+
+  const gate = args.gate || "all";
+  const files = resolveFiles(args);
+  const patterns = patternsForGate(gate);
+  const findings = scan(files, patterns);
+
+  process.stdout.write(
+    JSON.stringify(
+      {
+        gate,
+        filesScanned: files.length,
+        findings,
+        summary: summarize(findings),
+      },
+      null,
+      2,
+    ) + "\n",
+  );
   process.exit(0);
 }
-
-const gate = args.gate || "all";
-const files = resolveFiles(args);
-const patterns = patternsForGate(gate);
-const findings = scan(files, patterns);
-
-process.stdout.write(
-  JSON.stringify(
-    {
-      gate,
-      filesScanned: files.length,
-      findings,
-      summary: summarize(findings),
-    },
-    null,
-    2,
-  ) + "\n",
-);
-process.exit(0);
 
 // ---------------------------------------------------------------------------
 // Args
@@ -433,3 +435,6 @@ function summarize(findings) {
   }
   return out;
 }
+
+// Invoked last so all module-level `const` declarations above are initialized.
+main();
