@@ -1,0 +1,17 @@
+{
+  "name": "quality-checks",
+  "version": "1.1.0",
+  "released": "2026-05-13",
+  "description": "Nine-phase final-line-of-defense pipeline.",
+  "sources": {
+    "claude-code-security-review": {"repo": "getuslisted/claude-code-security-review", "ref": "main"},
+    "impeccable": {"repo": "getuslisted/impeccable", "ref": "main"},
+    "ui-ux-pro-max-skill": {"repo": "getuslisted/ui-ux-pro-max-skill", "ref": "main"}
+  },
+  "deterministic_checks": {
+    "ids": ["qc-001", "qc-002", "qc-007", "qc-009", "qc-042", "qc-043", "qc-070", "qc-071", "qc-072", "qc-080", "qc-081"],
+    "runner": "quality-checks/scripts/check.sh",
+    "tests": "quality-checks/tests/run-tests.sh",
+    "ci": ".github/workflows/quality-checks.yml"
+  }
+}

@@ -1,0 +1,7 @@
+.drawer {
+  transition: width 300ms ease-out, opacity 200ms;
+}
+
+.bad {
+  transition: padding 200ms;
+}

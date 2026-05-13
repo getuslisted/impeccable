@@ -1,0 +1,63 @@
+name: Quality Checks
+
+on:
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  deterministic:
+    name: Deterministic gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Install ripgrep
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep
+      - name: Run deterministic checks
+        run: |
+          chmod +x quality-checks/scripts/check.sh
+          quality-checks/scripts/check.sh
+        env:
+          QC_JSON: ${{ runner.temp }}/quality-checks.json
+      - name: Upload findings JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-checks-findings
+          path: ${{ runner.temp }}/quality-checks.json
+          if-no-files-found: ignore
+      - name: Comment on PR
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = process.env.RUNNER_TEMP + '/quality-checks.json';
+            if (!fs.existsSync(path)) return;
+            const data = JSON.parse(fs.readFileSync(path, 'utf8'));
+            const lines = ['## Quality Checks — Deterministic gate', '', `**Findings:** P0=${data.p0} P1=${data.p1} P2=${data.p2}`, ''];
+            for (const f of data.findings.slice(0, 30)) {
+              lines.push(`- **[${f.severity}]** \`${f.id}\` ${f.label} — \`${f.file}:${f.line}\``);
+              if (f.snippet) lines.push(`  \`${f.snippet.slice(0, 200)}\``);
+            }
+            if (data.findings.length > 30) lines.push(`\n_…and ${data.findings.length - 30} more._`);
+            lines.push('\nRun `/quality-checks` in Claude Code for the full nine-phase verdict.');
+            await github.rest.issues.createComment({owner: context.repo.owner, repo: context.repo.repo, issue_number: context.issue.number, body: lines.join('\n')});
+
+  test-checker:
+    name: Verify the checker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ripgrep
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep
+      - name: Self-test
+        run: |
+          chmod +x quality-checks/scripts/check.sh quality-checks/tests/run-tests.sh
+          quality-checks/tests/run-tests.sh
