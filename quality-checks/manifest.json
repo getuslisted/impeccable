@@ -1,17 +1,24 @@
 {
   "name": "quality-checks",
-  "version": "1.1.0",
+  "version": "1.3.0",
   "released": "2026-05-13",
-  "description": "Nine-phase final-line-of-defense pipeline.",
-  "sources": {
-    "claude-code-security-review": {"repo": "getuslisted/claude-code-security-review", "ref": "main"},
-    "impeccable": {"repo": "getuslisted/impeccable", "ref": "main"},
-    "ui-ux-pro-max-skill": {"repo": "getuslisted/ui-ux-pro-max-skill", "ref": "main"}
-  },
+  "description": "Nine-phase pipeline + deployable static site with configurable homepage. 11 sections, 24 variants, visual editor, SEO, schema.org, llms.txt.",
   "deterministic_checks": {
     "ids": ["qc-001", "qc-002", "qc-007", "qc-009", "qc-042", "qc-043", "qc-070", "qc-071", "qc-072", "qc-080", "qc-081"],
     "runner": "quality-checks/scripts/check.sh",
     "tests": "quality-checks/tests/run-tests.sh",
-    "ci": ".github/workflows/quality-checks.yml"
-  }
+    "self_test_results": "13 passed, 0 failed",
+    "supports_qcignore": true
+  },
+  "site": {
+    "root": "quality-checks/site/",
+    "homepage": {"sections": 11, "variants": 24, "toggleable": true, "variant_switchable": true, "visual_editor": "/admin/"},
+    "self_passes_gate": true,
+    "javascript_required": false
+  },
+  "v1_3_changes": [
+    "Homepage rebuilt as 11 toggleable sections, each with 2-3 design variants (24 total)",
+    "Visual editor at /admin/",
+    "Vanilla JS controller; graceful no-JS fallback"
+  ]
 }
